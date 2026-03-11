@@ -2,6 +2,7 @@ package com.anphan.expensetracker.service;
 
 import com.anphan.expensetracker.dto.UserDTO;
 import com.anphan.expensetracker.entity.User;
+import com.anphan.expensetracker.exception.ResourceNotFoundException;
 import com.anphan.expensetracker.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,7 @@ public class UserService {
 
     // Lay 1 user theo id
     public UserDTO getUserById(Long id){
-        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found!" + id);
+        User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found!" + id));
                 return convertToDTO(user);
     }
 

@@ -1,0 +1,34 @@
+package com.anphan.expensetracker.controller;
+
+import com.anphan.expensetracker.dto.UserDTO;
+import com.anphan.expensetracker.service.UserService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController // = @Controller + @ResponseBody
+@RequestMapping("/api/users") // Base URL cho tat ca endpoint trong class nay
+@RequiredArgsConstructor
+public class UserController {
+    private final UserService userService;
+    // GET /api/users  -> Lay tat ca users
+    @GetMapping
+    public ResponseEntity<List<UserDTO>> getAllUsers(){
+        return ResponseEntity.ok(userService.getAllUser());
+    }
+
+    // GET /api/users/1 -> Lay users theo id
+    @GetMapping("/{id}")
+    public ResponseEntity<UserDTO> getUserById(@PathVariable Long id){
+        return ResponseEntity.ok(userService.getUserById(id));
+    }
+
+    // DELETE /api/users/1 -> Xoa user theo id
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUserById(@PathVariable Long id){
+        userService.deleteUserById(id);
+        return ResponseEntity.noContent().build();
+    }
+}
