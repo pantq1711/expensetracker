@@ -6,10 +6,10 @@ import lombok.Data;
 
 @Data
 public class CategoryDTO {
-    private Long id; // chi dung cho response
+    private Long id;
+
     @NotBlank
     private String name;
     private String colorHex;
-    private Category.CategoryType type;
-
+    private Category.CategoryType categoryType;
 }

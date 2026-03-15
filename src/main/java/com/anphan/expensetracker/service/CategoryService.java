@@ -8,6 +8,7 @@ import com.anphan.expensetracker.exception.ResourceNotFoundException;
 import com.anphan.expensetracker.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
@@ -16,63 +17,59 @@ import java.util.List;
 public class CategoryService {
     private final CategoryRepository categoryRepository;
 
-    //Lay tat ca category, convert sang DTO
+    // get All Category
+
     public List<CategoryDTO> getAllCategory(){
         return categoryRepository.findAll()
                 .stream()
-                .map(this::convertToDTO) //voi moi category, goi convertToDTO
+                .map(this :: convertToDTO)
                 .toList();
     }
 
-    //Lay 1 category
+    // get category theo id
 
     public CategoryDTO getCategoryById(Long id){
-        Category category = categoryRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Category not found" + id));
+        Category category =  categoryRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Not found Category" + id));
         return convertToDTO(category);
     }
 
-    //Xoa 1 category theo id
+    // update category
+    public CategoryDTO updateCategoryById(Long id, CategoryDTO categoryDTO){
+        Category category = categoryRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Not found Category" + id));
+        category.setType(categoryDTO.getCategoryType());
+        category.setName(categoryDTO.getName());
+        category.setColorHex(categoryDTO.getColorHex());
+        categoryRepository.save(category);
+        return convertToDTO(category);
+    }
 
+    // create category
+    public CategoryDTO createCategory(CategoryDTO categoryDTO){
+        Category category = new Category();
+        category.setName(categoryDTO.getName());
+        category.setColorHex(categoryDTO.getColorHex());
+        category.setType(categoryDTO.getCategoryType());
+        User user = new User();
+        user.setId(2L);
+        category.setUser(user);
+        categoryRepository.save(category);
+        return convertToDTO(category);
+    }
+
+    // xoa category by id
     public void deleteCategoryById(Long id){
         if(!categoryRepository.existsById(id)){
-            throw new RuntimeException("Category Not Found" + id);
+            throw new ResourceNotFoundException("Not found Category" + id);
         }
         categoryRepository.deleteById(id);
     }
 
-    // tao moi category
-
-    public CategoryDTO createCategory(CategoryDTO dto){
-        Category category = new Category();
-        category.setName(dto.getName());
-        category.setColorHex(dto.getColorHex());
-        category.setType(dto.getType());
-        User user = new User();
-        user.setId(2L);
-        category.setUser(user);
-        Category saved = categoryRepository.save(category);
-        return convertToDTO(saved);
-    }
-
-    //cap nhat
-    public CategoryDTO updateCategory(Long id, CategoryDTO dto){
-        Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found" + id));
-        category.setName(dto.getName());
-        category.setType(dto.getType());
-        category.setColorHex(dto.getColorHex());
-        Category saved = categoryRepository.save(category);
-        return convertToDTO(saved);
-    }
-
-    //Convert Entity -> DTO( tranh lo thong tin ra ngoai)
-
     private CategoryDTO convertToDTO(Category category){
         CategoryDTO dto = new CategoryDTO();
+        dto.setName(category.getName());
         dto.setId(category.getId());
         dto.setColorHex(category.getColorHex());
-        dto.setName(category.getName());
-        dto.setType(category.getType());
+        dto.setCategoryType(category.getType());
         return dto;
     }
 }
