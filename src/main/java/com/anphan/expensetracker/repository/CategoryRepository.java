@@ -8,6 +8,6 @@ import org.w3c.dom.stylesheets.LinkStyle;
 import java.util.List;
 import java.util.Optional;
 
-public interface CategoryRepository extends JpaRepository <Category, Long>{
+public interface CategoryRepository extends JpaRepository<Category, Long>{
     List<Category> findByUser(User user);
 }

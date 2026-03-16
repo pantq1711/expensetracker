@@ -17,8 +17,7 @@ import java.util.List;
 public class CategoryService {
     private final CategoryRepository categoryRepository;
 
-    // get All Category
-
+    //get all category
     public List<CategoryDTO> getAllCategory(){
         return categoryRepository.findAll()
                 .stream()
@@ -26,19 +25,18 @@ public class CategoryService {
                 .toList();
     }
 
-    // get category theo id
-
+    // get category by Id
     public CategoryDTO getCategoryById(Long id){
-        Category category =  categoryRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Not found Category" + id));
+        Category category = categoryRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Not found Category" + id));
         return convertToDTO(category);
     }
 
     // update category
-    public CategoryDTO updateCategoryById(Long id, CategoryDTO categoryDTO){
+    public CategoryDTO updateCategory(Long id, CategoryDTO categoryDTO){
         Category category = categoryRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Not found Category" + id));
         category.setType(categoryDTO.getCategoryType());
-        category.setName(categoryDTO.getName());
         category.setColorHex(categoryDTO.getColorHex());
+        category.setName(categoryDTO.getName());
         categoryRepository.save(category);
         return convertToDTO(category);
     }
@@ -56,20 +54,20 @@ public class CategoryService {
         return convertToDTO(category);
     }
 
-    // xoa category by id
-    public void deleteCategoryById(Long id){
-        if(!categoryRepository.existsById(id)){
-            throw new ResourceNotFoundException("Not found Category" + id);
+    // delete category
+    public void deleteCategory(Long id){
+        if(categoryRepository.findById(id).isEmpty()){
+            throw new ResourceNotFoundException("Not found Category");
         }
         categoryRepository.deleteById(id);
     }
 
     private CategoryDTO convertToDTO(Category category){
-        CategoryDTO dto = new CategoryDTO();
-        dto.setName(category.getName());
-        dto.setId(category.getId());
-        dto.setColorHex(category.getColorHex());
-        dto.setCategoryType(category.getType());
-        return dto;
+        CategoryDTO categoryDTO = new CategoryDTO();
+        categoryDTO.setName(category.getName());
+        categoryDTO.setColorHex(category.getColorHex());
+        categoryDTO.setCategoryType(category.getType());
+        categoryDTO.setId(category.getId());
+        return categoryDTO;
     }
 }
