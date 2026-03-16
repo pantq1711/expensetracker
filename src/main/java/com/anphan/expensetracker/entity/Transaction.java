@@ -33,7 +33,7 @@ public class Transaction {
     @Column(length = 255)
     private String note;
 
-    @Column(nullable = false)
+    @Column(name = "date", nullable = false)
     private LocalDate date;
 
     @CreationTimestamp

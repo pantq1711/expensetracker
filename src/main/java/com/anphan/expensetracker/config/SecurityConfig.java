@@ -22,6 +22,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/categories/**").permitAll() // ← Thêm
+                        .requestMatchers("/api/transactions/**").permitAll()
                         .anyRequest().authenticated()
                 );
         return http.build();
