@@ -1,8 +1,6 @@
 package com.anphan.expensetracker.controller;
 
 import com.anphan.expensetracker.dto.TransactionDTO;
-import com.anphan.expensetracker.entity.Transaction;
-import com.anphan.expensetracker.entity.User;
 import com.anphan.expensetracker.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 
@@ -14,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -26,15 +23,15 @@ public class TransactionController {
     //get all transaction + pagination
     @GetMapping
     public ResponseEntity<?> getAllTransaction(
-        @RequestParam(required = false) Integer page,
-        @RequestParam(required = false) Integer size){
-        if(page != null && size != null){
-          Pageable pageable = PageRequest.of(page, size, Sort.by("date").descending());
-          return ResponseEntity.ok(transactionService.getAllTransaction(pageable));
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size){
+                if(page != null && size != null){
+                    Pageable pageable = PageRequest.of(page, size, Sort.by("date").descending());
+                    return ResponseEntity.ok(transactionService.getTransactionsByUser(pageable));
+                }
+                return ResponseEntity.ok(transactionService.getAllTransaction());
     }
-        return ResponseEntity.ok(transactionService.getAllTransaction());
 
-    }
 
     //pagination with date
     @GetMapping("/filter")

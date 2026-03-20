@@ -23,6 +23,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/categories/**").permitAll() // ← Thêm
                         .requestMatchers("/api/transactions/**").permitAll()
+                        .requestMatchers("/api/budgets/**").permitAll()
+                        .requestMatchers("/api/reports/**").permitAll()
                         .anyRequest().authenticated()
                 );
         return http.build();

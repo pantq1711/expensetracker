@@ -5,20 +5,15 @@ import com.anphan.expensetracker.entity.Category;
 import com.anphan.expensetracker.entity.Transaction;
 import com.anphan.expensetracker.entity.User;
 import com.anphan.expensetracker.exception.ResourceNotFoundException;
-import com.anphan.expensetracker.repository.CategoryRepository;
 import com.anphan.expensetracker.repository.TransactionRepository;
 import com.anphan.expensetracker.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.loader.LoaderLogging;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -27,20 +22,16 @@ public class TransactionService {
 
     private final UserRepository userRepository;
     // pagination
-    public Page<TransactionDTO> getAllTransaction(Pageable pageable){
+    public Page<TransactionDTO> getTransactionsByUser(Pageable pageable){
         User user = new User();
-        user.setId(2L); //tam thoi hardcore
-        Page<Transaction> page = transactionRepository.findByUser(user, pageable);
-        return page.map(this :: convertToDTO);
+        user.setId(2L);
+        return transactionRepository.findByUser(user, pageable).map(this ::convertToDTO);
     }
-    //pagination with filter
     public Page<TransactionDTO> getTransactionByUserAndDateBetween(LocalDate start, LocalDate end, Pageable pageable){
         User user = new User();
         user.setId(2L);
-        Page<Transaction> page = transactionRepository.findByUserAndDateBetween(user, start, end, pageable);
-        return page.map(this :: convertToDTO);
+        return transactionRepository.findByUserAndDateBetween(user, start, end, pageable).map(this :: convertToDTO);
     }
-
     public List<TransactionDTO> getAllTransaction(){
         return transactionRepository.findAll()
                 .stream()
