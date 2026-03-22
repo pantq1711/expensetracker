@@ -41,7 +41,8 @@ public class BudgetService {
     public BudgetDTO updateBudget(Long id, BudgetDTO dto){
         Budget budget = getBudgetByIdAndCheckOwner(id);
         budget.setAmount(dto.getAmount());
-        budget.setPeriod(dto.getPeriod());
+        budget.setMonth(dto.getMonth());
+        budget.setYear(dto.getYear());
         if(dto.getCategoryId() != null){
             Category category = new Category();
             category.setId(dto.getCategoryId());
@@ -55,7 +56,8 @@ public class BudgetService {
     public BudgetDTO createBudget(BudgetDTO dto){
         Budget budget = new Budget();
         budget.setAmount(dto.getAmount());
-        budget.setPeriod(dto.getPeriod());
+        budget.setMonth(dto.getMonth());
+        budget.setYear(dto.getYear());
         if(dto.getCategoryId() != null){
             Category category = new Category();
             category.setId(dto.getCategoryId());
@@ -94,7 +96,8 @@ public class BudgetService {
             dto.setCategoryId(budget.getCategory().getId());
             dto.setCategoryName(budget.getCategory().getName());
         }
-        dto.setPeriod(budget.getPeriod());
+        dto.setMonth(budget.getMonth());
+        dto.setYear(budget.getYear());
         return dto;
     }
 

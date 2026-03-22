@@ -27,7 +27,7 @@ public class TransactionController {
             @RequestParam(required = false) Integer size){
                 if(page != null && size != null){
                     Pageable pageable = PageRequest.of(page, size, Sort.by("date").descending());
-                    return ResponseEntity.ok(transactionService.getTransactionsByUser(pageable));
+                    return ResponseEntity.ok(transactionService.getAllTransactions(pageable));
                 }
                 return ResponseEntity.ok(transactionService.getAllTransaction());
     }

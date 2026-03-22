@@ -11,7 +11,7 @@ import java.time.YearMonth;
 public class BudgetDTO {
     private Long id;
 
-    private YearMonth period; // lưu "2026-03"
+    private int year, month;
 
     private BigDecimal amount;
 
