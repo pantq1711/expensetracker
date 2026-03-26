@@ -1,5 +1,5 @@
 package com.anphan.expensetracker.service;
-
+import com.anphan.expensetracker.entity.Note;
 import com.anphan.expensetracker.dto.CategoryReportDTO;
 import com.anphan.expensetracker.dto.FilterReportProjection;
 import com.anphan.expensetracker.dto.SummaryProjection;
@@ -26,6 +26,19 @@ public class TransactionService{
 
     private final TransactionRepository transactionRepository;
 
+    private final com.anphan.expensetracker.util.SecurityUtils securityUtils;
+
+    private Transaction getTransactionAndCheckOwnership(Long id){
+        Transaction transaction = transactionRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy giao dịch: " + id));
+
+        User currentUser = getCurrentUser();
+
+        if(!transaction.getUser().getId().equals(currentUser.getId())){
+            throw new RuntimeException("Bạn không có quyền truy cập");
+        }
+        return transaction;
+    }
+
     public List<TransactionDTO> getAllTransaction(){
         return transactionRepository.findAll()
                 .stream()
@@ -51,20 +64,13 @@ public class TransactionService{
     }
 
     public TransactionDTO getTransactionById(Long id){
-        Transaction transaction = transactionRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Not found Transaction"));
-        return convertToDTO(transaction);
+        return convertToDTO(getTransactionAndCheckOwnership(id));
     }
-
     public TransactionDTO updateTransaction(Long id, TransactionDTO dto){
-        Transaction transaction = transactionRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Not found Transaction"));
-        // BẢO MẬT: Kiểm tra xem User đang đăng nhập có phải chủ sở hữu không
-        if (!transaction.getUser().getId().equals(getCurrentUser().getId())) {
-            throw new AccessDeniedException("Bạn không có quyền sửa giao dịch này!");
-        }
-
-        transaction.setUser(getCurrentUser()); // CỦNG CỐ: Đảm bảo User luôn đúng
+        Transaction transaction = getTransactionAndCheckOwnership(id);
         if(dto.getCategoryId() != null){
             Category category = new Category();
+            category.setId(dto.getCategoryId());
             transaction.setCategory(category);
         }
         transaction.setAmount(dto.getAmount());
@@ -76,9 +82,9 @@ public class TransactionService{
     public TransactionDTO createTransaction(TransactionDTO dto){
         Transaction transaction = new Transaction();
         transaction.setUser(getCurrentUser());
-        transaction.setId(dto.getId());
         if(dto.getCategoryId() != null){
             Category category = new Category();
+            category.setId(dto.getCategoryId());
             transaction.setCategory(category);
         }
         transaction.setType(dto.getType());
@@ -90,16 +96,12 @@ public class TransactionService{
     }
 
     public void deleteTransaction(Long id){
-        Transaction transaction = transactionRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Not found Transaction"));
-        transactionRepository.delete(transaction);
+        transactionRepository.delete(getTransactionAndCheckOwnership(id));
     }
 
-    private User getCurrentUser(){
-        User user = new User();
-        user.setId(2L);
-        return user;
-    }
-
+     private User getCurrentUser() {
+     return securityUtils.getCurrentUser();
+ }
     private TransactionDTO convertToDTO(Transaction transaction){
         TransactionDTO dto = new TransactionDTO();
         dto.setId(transaction.getId());
@@ -112,5 +114,4 @@ public class TransactionService{
         }
         return dto;
     }
-
 }

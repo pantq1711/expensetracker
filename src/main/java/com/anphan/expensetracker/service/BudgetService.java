@@ -18,6 +18,19 @@ import java.util.List;
 public class BudgetService {
     private final BudgetRepository budgetRepository;
 
+    private final com.anphan.expensetracker.util.SecurityUtils securityUtils;
+
+    private Budget getBudgetAndCheckOwnership(Long id){
+        Budget budget = budgetRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ngân sách: " + id));
+
+        User currentUser = securityUtils.getCurrentUser();
+
+        if(!budget.getUser().getId().equals(currentUser.getId())){
+            throw new RuntimeException("Bạn không có quyền truy cập!");
+        }
+        return budget;
+    }
+
     //get All Budget
     public Page<BudgetDTO> getAllBudgets(Pageable pageable){ // TODO: only for admin
         return budgetRepository.findAll(pageable)
@@ -32,14 +45,13 @@ public class BudgetService {
 
     //get budget by id
     public BudgetDTO getBudgetById(Long id){
-        Budget budget = getBudgetByIdAndCheckOwner(id);
-        return convertToDTO(budget);
+        return convertToDTO(getBudgetAndCheckOwnership(id));
     }
 
 
     //update budget
     public BudgetDTO updateBudget(Long id, BudgetDTO dto){
-        Budget budget = getBudgetByIdAndCheckOwner(id);
+        Budget budget = getBudgetAndCheckOwnership(id);
         budget.setAmount(dto.getAmount());
         budget.setMonth(dto.getMonth());
         budget.setYear(dto.getYear());
@@ -70,22 +82,11 @@ public class BudgetService {
 
     //delete budget
     public void deleteBudget(Long id){
-        Budget budget = getBudgetByIdAndCheckOwner(id);
-        budgetRepository.delete(budget);
-    }
-
-    private Budget getBudgetByIdAndCheckOwner(Long id){
-        Budget budget = budgetRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Not found budget"));
-        if(!budget.getUser().getId().equals(getCurrentUser().getId())){
-            throw new RuntimeException("Forbidden");
-        }
-        return budget;
+        budgetRepository.delete(getBudgetAndCheckOwnership(id));
     }
 
     private User getCurrentUser(){
-        User user = new User();
-        user.setId(2L);
-        return user;
+        return securityUtils.getCurrentUser();
     }
 
     private BudgetDTO convertToDTO(Budget budget){

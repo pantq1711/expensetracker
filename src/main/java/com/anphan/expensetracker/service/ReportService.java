@@ -18,11 +18,11 @@ import java.util.List;
 public class ReportService {
     private final TransactionRepository transactionRepository;
 
+    private final com.anphan.expensetracker.util.SecurityUtils securityUtils;
+
     // Giả lập lấy User hiện tại (Sau này dùng Spring Security sẽ thay bằng Principal)
     private User getMockUser() {
-        User user = new User();
-        user.setId(2L);
-        return user;
+        return securityUtils.getCurrentUser();
     }
 
     // Bài 3: Tổng quan Thu/Chi
