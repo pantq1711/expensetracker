@@ -2,6 +2,7 @@ package com.anphan.expensetracker.controller;
 
 import com.anphan.expensetracker.dto.BudgetDTO;
 import com.anphan.expensetracker.service.BudgetService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -40,12 +41,12 @@ public class BudgetController {
     }
 
     @PostMapping
-    public ResponseEntity<BudgetDTO> createBudget(@RequestBody BudgetDTO budgetDTO){
+    public ResponseEntity<BudgetDTO> createBudget(@Valid  @RequestBody BudgetDTO budgetDTO){
         return ResponseEntity.status(201).body(budgetService.createBudget(budgetDTO));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<BudgetDTO> updateBudget(@PathVariable Long id, @RequestBody BudgetDTO budgetDTO){
+    public ResponseEntity<BudgetDTO> updateBudget(@PathVariable Long id,@Valid @RequestBody BudgetDTO budgetDTO){
         return ResponseEntity.ok().body(budgetService.updateBudget(id, budgetDTO));
     }
 

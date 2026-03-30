@@ -31,34 +31,31 @@ public class JwtService {
                 .compact();
     }
 
-    //generic method extract bat ky claim nao
-    private <T> T extractClaim(String token, Function<Claims, T> claimsResolve){
+    private <T> T extractClaim(String token, Function<Claims, T> function){
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(getSignKey())
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
-        return claimsResolve.apply(claims);
+        return function.apply(claims);
     }
 
-    //extract email tu token
     public String extractEmail(String token){
-        return extractClaim(token, Claims :: getSubject);
+        return extractClaim(token, Claims::getSubject);
     }
 
-    //kiem tra xem token con hop le ko
-    public boolean isTokenValid(String token, String email){
-        return extractEmail(token).equals(email) && !isTokenExpired(token);
-    }
-
-    //kiem tra xem het han chua
     public boolean isTokenExpired(String token){
         return extractClaim(token, Claims::getExpiration).before(new Date());
     }
 
-    // convert String -> Key Object
+    public boolean isTokenValid(String token, String email){
+        return extractEmail(token).equals(email) && !isTokenExpired(token);
+    }
+
+    //Convert String -> Key Object
     private Key getSignKey(){
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
+
 }

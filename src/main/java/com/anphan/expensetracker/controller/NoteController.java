@@ -3,6 +3,7 @@ package com.anphan.expensetracker.controller;
 import com.anphan.expensetracker.dto.NoteDTO;
 import com.anphan.expensetracker.entity.User;
 import com.anphan.expensetracker.service.NoteService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -38,7 +39,7 @@ public class NoteController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<NoteDTO> updateNote(@PathVariable Long id, @RequestBody NoteDTO dto){
+    public ResponseEntity<NoteDTO> updateNote(@PathVariable Long id,@Valid  @RequestBody NoteDTO dto){
         return ResponseEntity.ok(noteService.updateNote(id, dto));
     }
 

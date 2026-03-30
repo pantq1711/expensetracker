@@ -1,6 +1,8 @@
 package com.anphan.expensetracker.config;
 
 import com.anphan.expensetracker.filter.JwtAuthFilter;
+import com.anphan.expensetracker.security.JwtAccessDeniedHandler;
+import com.anphan.expensetracker.security.JwtAuthEntryPoint;
 import com.anphan.expensetracker.service.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -13,6 +15,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -22,6 +25,8 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
     private final CustomUserDetailsService userDetailsService;
+    private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
+    private final JwtAuthEntryPoint authenticationEntryPoint;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -50,6 +55,10 @@ public class SecurityConfig {
                 // STATELESS: không dùng session — mỗi request phải tự mang token
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(authenticationEntryPoint)     // 401
+                        .accessDeniedHandler(jwtAccessDeniedHandler)     // 403
+                )
 
                 .authorizeHttpRequests(auth -> auth
                         // Các endpoint public — không cần token

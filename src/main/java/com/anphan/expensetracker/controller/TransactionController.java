@@ -2,6 +2,7 @@ package com.anphan.expensetracker.controller;
 
 import com.anphan.expensetracker.dto.TransactionDTO;
 import com.anphan.expensetracker.service.TransactionService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
@@ -47,13 +48,13 @@ public class TransactionController {
 
     //update transaction
     @PutMapping("/{id}")
-    public ResponseEntity<TransactionDTO> updateTransaction(@PathVariable Long id, @RequestBody TransactionDTO dto){
+    public ResponseEntity<TransactionDTO> updateTransaction(@PathVariable Long id, @Valid  @RequestBody TransactionDTO dto){
         return ResponseEntity.status(200).body(transactionService.updateTransaction(id, dto));
     }
 
     //create transaction
     @PostMapping
-    public ResponseEntity<TransactionDTO> createTransaction(@RequestBody TransactionDTO dto){
+    public ResponseEntity<TransactionDTO> createTransaction(@Valid @RequestBody TransactionDTO dto){
         return ResponseEntity.status(201).body(transactionService.createTransaction(dto));
     }
 

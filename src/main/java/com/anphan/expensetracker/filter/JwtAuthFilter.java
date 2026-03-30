@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -20,57 +21,54 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
     // OncePerRequestFilter = đảm bảo filter chỉ chạy 1 lần per request
-
     private final JwtService jwtService;
-    private final CustomUserDetailsService userDetailsService;
-
+    private final UserDetailsService userDetailsService;
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
-                                    FilterChain filterChain)
-            throws ServletException, IOException {
+                                    FilterChain filterChain) throws ServletException, IOException {
 
-        // Bước 1: Đọc header Authorization
-        final String authHeader = request.getHeader("Authorization");
+        String threadName = Thread.currentThread().getName(); // Lấy tên Thread hiện tại
+        System.out.println("\n=== JwtAuthFilter === URL: " + request.getRequestURI());
 
-        // Bước 2: Không có header hoặc không phải Bearer → bỏ qua, đi tiếp
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        Object initialAuth = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("--- [THREAD: " + threadName + "] ---");
+        System.out.println("1. Auth ban đầu trong Thread: " + (initialAuth != null ? initialAuth : "TRỐNG"));
+
+        final String header = request.getHeader("Authorization");
+        System.out.println("Header: " + header);
+
+        if (header == null || !header.startsWith("Bearer ")) {
+            System.out.println(">>> Không có token → đi tiếp");
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Bước 3: Extract token (bỏ "Bearer " ở đầu)
-        final String token = authHeader.substring(7);
+        final String authToken = header.substring(7);
+        try {
+            final String email = jwtService.extractEmail(authToken);
+            System.out.println("Email extract: " + email);
+            System.out.println("Auth hiện tại: " + SecurityContextHolder.getContext().getAuthentication());
 
-        // Bước 4: Extract email từ token
-        final String email = jwtService.extractEmail(token);
-
-        // Bước 5: Nếu có email và chưa được xác thực trong session hiện tại
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-
-            // Bước 6: Load UserDetails từ DB
-            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-
-            // Bước 7: Verify token hợp lệ
-            if (jwtService.isTokenValid(token, userDetails.getUsername())) {
-
-                // Bước 8: Tạo Authentication object và lưu vào SecurityContext
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,                        // credentials = null vì đã verify qua token
-                                userDetails.getAuthorities() // roles/permissions
-                        );
-
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                // Bước 9: Set vào SecurityContextHolder
-                // Từ đây các layer sau có thể gọi getAuthentication() để lấy user
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+                if (jwtService.isTokenValid(authToken, userDetails.getUsername())) {
+                    UsernamePasswordAuthenticationToken authenticationToken =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails, null, userDetails.getAuthorities());
+                    authenticationToken.setDetails(
+                            new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                    System.out.println(">>> Set auth thành công: " + userDetails.getUsername());
+                }
             }
+        } catch (Exception e) {
+            System.out.println("2. Auth TRƯỚC khi clear: " + SecurityContextHolder.getContext().getAuthentication());
+            System.out.println(">>> Exception: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            SecurityContextHolder.clearContext();
+            System.out.println("3. Auth SAU khi clear: " + SecurityContextHolder.getContext().getAuthentication());
         }
 
-        // Bước 10: Đi tiếp đến filter/controller tiếp theo
         filterChain.doFilter(request, response);
     }
 }

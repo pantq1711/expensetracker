@@ -2,6 +2,7 @@ package com.anphan.expensetracker.controller;
 
 import com.anphan.expensetracker.dto.CategoryDTO;
 import com.anphan.expensetracker.service.CategoryService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,13 +30,13 @@ public class CategoryController {
 
     // update category
     @PutMapping("/{id}")
-    public ResponseEntity<CategoryDTO> updateCategory(@PathVariable Long id, @RequestBody CategoryDTO dto){
+    public ResponseEntity<CategoryDTO> updateCategory(@PathVariable Long id, @Valid @RequestBody CategoryDTO dto){
         return ResponseEntity.ok().body(categoryService.updateCategory(id, dto));
     }
 
     // create category
     @PostMapping
-    public ResponseEntity<CategoryDTO> createCategory(@RequestBody CategoryDTO dto){
+    public ResponseEntity<CategoryDTO> createCategory(@Valid  @RequestBody CategoryDTO dto){
         return ResponseEntity.status(201).body(categoryService.createCategory(dto));
     }
 
