@@ -9,6 +9,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +21,12 @@ public class BudgetController {
 
     private final BudgetService budgetService;
 
+    @GetMapping("/admin")
+    @PreAuthorize("hasRole('ADMIN')") // ← chỉ ADMIN mới gọi được
+    public ResponseEntity<Page<BudgetDTO>> getAllBudgets(Pageable pageable) {
+        return ResponseEntity.ok(budgetService.getAllBudgets(pageable));
+    }
+
     // get All Budget
     @GetMapping
     public ResponseEntity<Page<BudgetDTO>> getBudgetsByUser(
@@ -30,10 +37,6 @@ public class BudgetController {
         return ResponseEntity.ok(budgetService.getBudgetsByUser(pageable));
     }
 
-    @GetMapping("/admin")
-    public ResponseEntity<Page<BudgetDTO>> getAllBudgets(Pageable pageable){
-        return ResponseEntity.ok(budgetService.getAllBudgets(pageable));
-    }
 
     @GetMapping("/{id}")
     public ResponseEntity<BudgetDTO> getBudgetById(@PathVariable Long id){

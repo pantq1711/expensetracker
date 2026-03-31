@@ -4,6 +4,7 @@ import com.anphan.expensetracker.dto.UserDTO;
 import com.anphan.expensetracker.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,12 +13,13 @@ import java.util.List;
 @RequestMapping("/api/users") // Base URL cho tat ca endpoint trong class nay
 @RequiredArgsConstructor
 public class UserController {
-    private final UserService userService;
-    // GET /api/users  -> Lay tat ca users
+
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<UserDTO>> getAllUsers(){
         return ResponseEntity.ok(userService.getAllUser());
     }
+    private final UserService userService;
 
     // GET /api/users/1 -> Lay users theo id
     @GetMapping("/{id}")

@@ -1,9 +1,10 @@
 package com.anphan.expensetracker.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
-public class AuthResponse {
-    private String token;
+public class RefreshTokenRequest {
+    @NotBlank
     private String refreshToken;
 }

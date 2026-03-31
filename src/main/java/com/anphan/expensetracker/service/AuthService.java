@@ -3,19 +3,25 @@ package com.anphan.expensetracker.service;
 import com.anphan.expensetracker.dto.AuthResponse;
 import com.anphan.expensetracker.dto.LoginRequest;
 import com.anphan.expensetracker.dto.RegisterRequest;
+import com.anphan.expensetracker.entity.RefreshToken;
 import com.anphan.expensetracker.entity.User;
+import com.anphan.expensetracker.repository.RefreshTokenRepository;
 import com.anphan.expensetracker.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService; // inject JwtService để tạo token
+    private final RefreshTokenService refreshTokenService;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -30,12 +36,7 @@ public class AuthService {
 
         userRepository.save(user);
 
-        // Tạo JWT thật từ email
-        String token = jwtService.generateToken(user.getEmail());
-
-        AuthResponse response = new AuthResponse();
-        response.setToken(token); // trả JWT thật, không còn dummy-token
-        return response;
+        return buildAuthResponse(user);
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -46,11 +47,31 @@ public class AuthService {
             throw new RuntimeException("Wrong password!");
         }
 
-        // Tạo JWT thật từ email
-        String token = jwtService.generateToken(user.getEmail());
+        return buildAuthResponse(user);
+    }
 
-        AuthResponse response = new AuthResponse();
-        response.setToken(token);
-        return response;
+    public AuthResponse refreshToken(String refreshTokenStr){
+        RefreshToken oldRefreshToken = refreshTokenService.verifyRefreshToken(refreshTokenStr);
+
+        User user = oldRefreshToken.getUser();
+
+        refreshTokenRepository.deleteByUser(user);
+
+        //Tao refresh token moi
+        return buildAuthResponse(user);
+    }
+
+    public void logout(User user){
+        refreshTokenService.deleteRefreshToken(user);
+    }
+
+    public AuthResponse buildAuthResponse(User user){
+        String accessToken = jwtService.generateToken(user.getEmail());
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+
+        AuthResponse authResponse = new AuthResponse();
+        authResponse.setToken(accessToken);
+        authResponse.setRefreshToken(refreshToken.getToken());
+        return authResponse;
     }
 }
