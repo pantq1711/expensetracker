@@ -43,7 +43,7 @@
 
         public CategoryDTO updateCategory(Long id, CategoryDTO dto){
             Category category = getCategoryAndCheckOwnership(id);
-            category.setId(dto.getId());
+            category.setName(dto.getName());
             category.setColorHex(dto.getColorHex());
             category.setType(dto.getCategoryType());
             categoryRepository.save(category);
@@ -53,6 +53,7 @@
         public CategoryDTO createCategory(CategoryDTO dto){
             Category category = new Category();
             User user = securityUtils.getCurrentUser();
+            category.setName(dto.getName());
             category.setUser(user);
             category.setType(dto.getCategoryType());
             category.setColorHex(dto.getColorHex());

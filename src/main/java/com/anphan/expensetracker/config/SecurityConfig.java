@@ -63,9 +63,7 @@ public class SecurityConfig {
                 )
 
                 .authorizeHttpRequests(auth -> auth
-                        // Các endpoint public — không cần token
                         .requestMatchers("/api/auth/**").permitAll()
-                        // Tất cả endpoint còn lại — phải có token hợp lệ
                         .anyRequest().authenticated()
                 )
 

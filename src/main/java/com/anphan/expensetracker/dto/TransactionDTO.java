@@ -28,6 +28,6 @@ public class TransactionDTO {
     @Size(max = 255)
     private String note;
 
-    private Long CategoryId;
+    private Long categoryId;
 
 }

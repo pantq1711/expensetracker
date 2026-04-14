@@ -52,12 +52,7 @@ public class AuthService {
 
     public AuthResponse refreshToken(String refreshTokenStr){
         RefreshToken oldRefreshToken = refreshTokenService.verifyRefreshToken(refreshTokenStr);
-
         User user = oldRefreshToken.getUser();
-
-        refreshTokenRepository.deleteByUser(user);
-
-        //Tao refresh token moi
         return buildAuthResponse(user);
     }
 
@@ -66,12 +61,12 @@ public class AuthService {
     }
 
     public AuthResponse buildAuthResponse(User user){
-        String accessToken = jwtService.generateToken(user.getEmail());
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+        String accessToken = jwtService.generateToken(user.getEmail());
 
         AuthResponse authResponse = new AuthResponse();
-        authResponse.setToken(accessToken);
         authResponse.setRefreshToken(refreshToken.getToken());
+        authResponse.setToken(accessToken);
         return authResponse;
     }
 }

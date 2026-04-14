@@ -29,6 +29,7 @@ public class UserController {
 
     // DELETE /api/users/1 -> Xoa user theo id
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or #id == principal.id") //data ownership
     public ResponseEntity<Void> deleteUserById(@PathVariable Long id){
         userService.deleteUserById(id);
         return ResponseEntity.noContent().build();
