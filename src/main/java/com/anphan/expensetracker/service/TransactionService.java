@@ -8,6 +8,7 @@ import com.anphan.expensetracker.entity.Category;
 import com.anphan.expensetracker.entity.Transaction;
 import com.anphan.expensetracker.entity.User;
 import com.anphan.expensetracker.exception.ResourceNotFoundException;
+import com.anphan.expensetracker.repository.CategoryRepository;
 import com.anphan.expensetracker.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cglib.core.Local;
@@ -25,6 +26,8 @@ import java.util.List;
 public class TransactionService{
 
     private final TransactionRepository transactionRepository;
+
+    private final CategoryRepository categoryRepository;
 
     private final com.anphan.expensetracker.util.SecurityUtils securityUtils;
 
@@ -68,11 +71,9 @@ public class TransactionService{
     }
     public TransactionDTO updateTransaction(Long id, TransactionDTO dto){
         Transaction transaction = getTransactionAndCheckOwnership(id);
-        if(dto.getCategoryId() != null){
-            Category category = new Category();
-            category.setId(dto.getCategoryId());
-            transaction.setCategory(category);
-        }
+        Category category = categoryRepository.findById(dto.getCategoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Not found category with ID: " + dto.getCategoryId()));
+        transaction.setCategory(category);
         transaction.setAmount(dto.getAmount());
         transaction.setNote(dto.getNote());
         transactionRepository.save(transaction);
@@ -82,11 +83,9 @@ public class TransactionService{
     public TransactionDTO createTransaction(TransactionDTO dto){
         Transaction transaction = new Transaction();
         transaction.setUser(getCurrentUser());
-        if(dto.getCategoryId() != null){
-            Category category = new Category();
-            category.setId(dto.getCategoryId());
-            transaction.setCategory(category);
-        }
+        Category category = categoryRepository.findById(dto.getCategoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Not found category with ID: " + dto.getCategoryId()));
+        transaction.setCategory(category);
         transaction.setType(dto.getType());
         transaction.setDate(dto.getDate());
         transaction.setAmount(dto.getAmount());
@@ -109,9 +108,9 @@ public class TransactionService{
         dto.setType(transaction.getType());
         dto.setNote(transaction.getNote());
         dto.setDate(transaction.getDate());
-        if(transaction.getCategory() != null){
-            dto.setCategoryId(transaction.getCategory().getId());
-        }
+        Category category = categoryRepository.findById(dto.getCategoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Not found category with ID: " + dto.getCategoryId()));
+        transaction.setCategory(category);
         return dto;
     }
 }

@@ -70,6 +70,7 @@
             dto.setId(category.getId());
             dto.setCategoryType(category.getType());
             dto.setName(category.getName());
+            dto.setColorHex(category.getColorHex());
             return dto;
         }
     }

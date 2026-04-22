@@ -6,6 +6,7 @@ import com.anphan.expensetracker.entity.Category;
 import com.anphan.expensetracker.entity.User;
 import com.anphan.expensetracker.exception.ResourceNotFoundException;
 import com.anphan.expensetracker.repository.BudgetRepository;
+import com.anphan.expensetracker.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +20,7 @@ public class BudgetService {
     private final BudgetRepository budgetRepository;
 
     private final com.anphan.expensetracker.util.SecurityUtils securityUtils;
+    private final CategoryRepository categoryRepository;
 
     private Budget getBudgetAndCheckOwnership(Long id){
         Budget budget = budgetRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ngân sách: " + id));
@@ -26,7 +28,7 @@ public class BudgetService {
         User currentUser = securityUtils.getCurrentUser();
 
         if(!budget.getUser().getId().equals(currentUser.getId())){
-            throw new RuntimeException("Bạn không có quyền truy cập!");
+            throw new RuntimeException("You don't have permission to access!");
         }
         return budget;
     }
@@ -55,11 +57,9 @@ public class BudgetService {
         budget.setAmount(dto.getAmount());
         budget.setMonth(dto.getMonth());
         budget.setYear(dto.getYear());
-        if(dto.getCategoryId() != null){
-            Category category = new Category();
-            category.setId(dto.getCategoryId());
-            budget.setCategory(category);
-        }
+        Category category = categoryRepository.findById(dto.getCategoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Not found category with ID: " + dto.getCategoryId()));
+        budget.setCategory(category);
         budgetRepository.save(budget);
         return convertToDTO(budget);
     }
@@ -70,11 +70,9 @@ public class BudgetService {
         budget.setAmount(dto.getAmount());
         budget.setMonth(dto.getMonth());
         budget.setYear(dto.getYear());
-        if(dto.getCategoryId() != null){
-            Category category = new Category();
-            category.setId(dto.getCategoryId());
-            budget.setCategory(category);
-        }
+        Category category = categoryRepository.findById(dto.getCategoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Not found category with ID: " + dto.getCategoryId()));
+        budget.setCategory(category);
         budget.setUser(getCurrentUser());
         budgetRepository.save(budget);
         return convertToDTO(budget);
@@ -93,10 +91,9 @@ public class BudgetService {
         BudgetDTO dto = new BudgetDTO();
         dto.setAmount(budget.getAmount());
         dto.setId(budget.getId());
-        if(budget.getCategory() != null){
-            dto.setCategoryId(budget.getCategory().getId());
-            dto.setCategoryName(budget.getCategory().getName());
-        }
+        Category category = categoryRepository.findById(dto.getCategoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Not found category with ID: " + dto.getCategoryId()));
+        dto.setCategoryId(category.getId());
         dto.setMonth(budget.getMonth());
         dto.setYear(budget.getYear());
         return dto;

@@ -24,7 +24,7 @@ public class NoteService {
         User currentUser = getCurrentUser();
 
         if(!note.getUser().getId().equals(currentUser.getId())){
-            throw new RuntimeException("Bạn không có quyền truy cập");
+            throw new RuntimeException("You don't have permission to access!");
         }
         return note;
     }
