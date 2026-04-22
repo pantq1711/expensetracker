@@ -22,7 +22,7 @@ public class CategoryController {
     @Operation(summary = "Get all categories of the current user")
     @GetMapping
     public ResponseEntity<List<CategoryDTO>> getAllCategory(){
-        return ResponseEntity.ok().body(categoryService.getAllCategory());
+        return ResponseEntity.ok().body(categoryService.getAllCategoriesForAdmin());
     }
 
     @Operation(summary = "Get category details by ID")

@@ -1,7 +1,5 @@
 package com.anphan.expensetracker.service;
-import com.anphan.expensetracker.entity.Note;
 import com.anphan.expensetracker.dto.CategoryReportDTO;
-import com.anphan.expensetracker.dto.FilterReportProjection;
 import com.anphan.expensetracker.dto.SummaryProjection;
 import com.anphan.expensetracker.dto.TransactionDTO;
 import com.anphan.expensetracker.entity.Category;
@@ -11,7 +9,6 @@ import com.anphan.expensetracker.exception.ResourceNotFoundException;
 import com.anphan.expensetracker.repository.CategoryRepository;
 import com.anphan.expensetracker.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -32,17 +29,15 @@ public class TransactionService{
     private final com.anphan.expensetracker.util.SecurityUtils securityUtils;
 
     private Transaction getTransactionAndCheckOwnership(Long id){
-        Transaction transaction = transactionRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy giao dịch: " + id));
+        Transaction transaction = transactionRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Not found Transaction: " + id));
 
-        User currentUser = getCurrentUser();
-
-        if(!transaction.getUser().getId().equals(currentUser.getId())){
-            throw new RuntimeException("Bạn không có quyền truy cập");
+        if(!securityUtils.isAdminOrOwner(transaction.getUser().getId())){
+            throw new AccessDeniedException("You don't have permission to access!");
         }
         return transaction;
     }
 
-    public List<TransactionDTO> getAllTransaction(){
+    public List<TransactionDTO> getAllTransactionsForAdmin(){
         return transactionRepository.findAll()
                 .stream()
                 .map(this :: convertToDTO)
@@ -76,6 +71,8 @@ public class TransactionService{
         transaction.setCategory(category);
         transaction.setAmount(dto.getAmount());
         transaction.setNote(dto.getNote());
+        transaction.setType(dto.getType());
+        transaction.setDate(dto.getDate());
         transactionRepository.save(transaction);
         return convertToDTO(transaction);
     }
@@ -85,6 +82,9 @@ public class TransactionService{
         transaction.setUser(getCurrentUser());
         Category category = categoryRepository.findById(dto.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Not found category with ID: " + dto.getCategoryId()));
+        if(!securityUtils.isAdminOrOwner(category.getUser().getId())){
+            throw new AccessDeniedException("No permission");
+        }
         transaction.setCategory(category);
         transaction.setType(dto.getType());
         transaction.setDate(dto.getDate());
@@ -108,9 +108,9 @@ public class TransactionService{
         dto.setType(transaction.getType());
         dto.setNote(transaction.getNote());
         dto.setDate(transaction.getDate());
-        Category category = categoryRepository.findById(dto.getCategoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Not found category with ID: " + dto.getCategoryId()));
-        transaction.setCategory(category);
+        if (transaction.getCategory() != null) {
+            dto.setCategoryId(transaction.getCategory().getId());
+        }
         return dto;
     }
 }

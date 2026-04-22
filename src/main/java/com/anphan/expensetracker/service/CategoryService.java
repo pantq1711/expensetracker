@@ -1,14 +1,13 @@
     package com.anphan.expensetracker.service;
 
     import com.anphan.expensetracker.dto.CategoryDTO;
-    import com.anphan.expensetracker.dto.UserDTO;
     import com.anphan.expensetracker.entity.Category;
     import com.anphan.expensetracker.entity.User;
     import com.anphan.expensetracker.exception.ResourceNotFoundException;
     import com.anphan.expensetracker.repository.CategoryRepository;
     import lombok.RequiredArgsConstructor;
+    import org.springframework.security.access.AccessDeniedException;
     import org.springframework.stereotype.Service;
-    import org.springframework.web.bind.annotation.RequestBody;
 
     import java.util.List;
 
@@ -19,18 +18,16 @@
         private final com.anphan.expensetracker.util.SecurityUtils securityUtils;
 
         private Category getCategoryAndCheckOwnership(Long id){
-            Category category = categoryRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy danh mục: " + id));
+            Category category = categoryRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Not found Category: " + id));
 
-            User currentUser = securityUtils.getCurrentUser();
-
-            if(!category.getUser().getId().equals(currentUser.getId())){
-                throw new RuntimeException("Bạn không có quyền truy cập");
+            if(!securityUtils.isAdminOrOwner(category.getUser().getId())){
+                throw new AccessDeniedException("No permission");
             }
 
             return category;
         }
 
-        public List<CategoryDTO> getAllCategory(){
+        public List<CategoryDTO> getAllCategoriesForAdmin(){
             return categoryRepository.findAll()
                     .stream()
                     .map(this :: convertToDTO)

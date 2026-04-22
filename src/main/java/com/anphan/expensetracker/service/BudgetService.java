@@ -10,6 +10,7 @@ import com.anphan.expensetracker.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,12 +24,10 @@ public class BudgetService {
     private final CategoryRepository categoryRepository;
 
     private Budget getBudgetAndCheckOwnership(Long id){
-        Budget budget = budgetRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ngân sách: " + id));
+        Budget budget = budgetRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Not found Budget: " + id));
 
-        User currentUser = securityUtils.getCurrentUser();
-
-        if(!budget.getUser().getId().equals(currentUser.getId())){
-            throw new RuntimeException("You don't have permission to access!");
+        if(!securityUtils.isAdminOrOwner(budget.getUser().getId())){
+            throw new AccessDeniedException("No permission!");
         }
         return budget;
     }
@@ -59,6 +58,9 @@ public class BudgetService {
         budget.setYear(dto.getYear());
         Category category = categoryRepository.findById(dto.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Not found category with ID: " + dto.getCategoryId()));
+        if (!securityUtils.isAdminOrOwner(category.getUser().getId())) {
+            throw new AccessDeniedException("No permission");
+        }
         budget.setCategory(category);
         budgetRepository.save(budget);
         return convertToDTO(budget);
@@ -72,6 +74,9 @@ public class BudgetService {
         budget.setYear(dto.getYear());
         Category category = categoryRepository.findById(dto.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Not found category with ID: " + dto.getCategoryId()));
+        if (!securityUtils.isAdminOrOwner(category.getUser().getId())) {
+            throw new AccessDeniedException("No permission");
+        }
         budget.setCategory(category);
         budget.setUser(getCurrentUser());
         budgetRepository.save(budget);
@@ -91,9 +96,9 @@ public class BudgetService {
         BudgetDTO dto = new BudgetDTO();
         dto.setAmount(budget.getAmount());
         dto.setId(budget.getId());
-        Category category = categoryRepository.findById(dto.getCategoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Not found category with ID: " + dto.getCategoryId()));
-        dto.setCategoryId(category.getId());
+        if (budget.getCategory() != null) {
+            dto.setCategoryId(budget.getCategory().getId());
+        }
         dto.setMonth(budget.getMonth());
         dto.setYear(budget.getYear());
         return dto;

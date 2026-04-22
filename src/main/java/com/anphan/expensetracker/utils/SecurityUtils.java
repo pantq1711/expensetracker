@@ -30,4 +30,10 @@ public class SecurityUtils {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
+
+    public boolean isAdminOrOwner(Long resourceOwnerId) {
+        User current = getCurrentUser();
+        return current.getRole() == User.Role.ADMIN
+                || current.getId().equals(resourceOwnerId);
+    }
 }

@@ -20,28 +20,25 @@ public class ReportService {
 
     private final com.anphan.expensetracker.util.SecurityUtils securityUtils;
 
-    // Giả lập lấy User hiện tại (Sau này dùng Spring Security sẽ thay bằng Principal)
-    private User getMockUser() {
-        return securityUtils.getCurrentUser();
-    }
+    User user = securityUtils.getCurrentUser();
 
     // Bài 3: Tổng quan Thu/Chi
     public SummaryProjection getSumByUser() {
-        return transactionRepository.sumByUser(getMockUser());
+        return transactionRepository.sumByUser(user);
     }
 
     // Bài 6 (Cũ): Thống kê theo Category
     public List<CategoryReportDTO> getReportByNameCategory() {
-        return transactionRepository.sumByCategoryName(getMockUser());
+        return transactionRepository.sumByCategoryName(user);
     }
 
     // --- BỔ SUNG BÀI 4: Filter & Report ---
     public FilterReportProjection getTotalAndCount(LocalDate from, LocalDate to, Transaction.TransactionType type) {
-        return transactionRepository.totalAndCountBetweenDate(getMockUser(), from, to, type);
+        return transactionRepository.totalAndCountBetweenDate(user, from, to, type);
     }
 
     // --- BỔ SUNG BÀI 5: So sánh 2 tháng ---
     public RealDashBoardProjection getDiff(LocalDate s1, LocalDate e1, LocalDate s2, LocalDate e2) {
-        return transactionRepository.difBetweenMonth(getMockUser(), s1, e1, s2, e2);
+        return transactionRepository.difBetweenMonth(user, s1, e1, s2, e2);
     }
 }

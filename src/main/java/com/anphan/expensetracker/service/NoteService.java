@@ -8,6 +8,7 @@ import com.anphan.expensetracker.repository.NoteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,12 +20,10 @@ public class NoteService {
     private final com.anphan.expensetracker.util.SecurityUtils securityUtils;
 
     private Note getNoteAndCheckOwnership(Long id){
-        Note note = noteRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ghi chú: " + id));
+        Note note = noteRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Not found Note: " + id));
 
-        User currentUser = getCurrentUser();
-
-        if(!note.getUser().getId().equals(currentUser.getId())){
-            throw new RuntimeException("You don't have permission to access!");
+        if(!securityUtils.isAdminOrOwner(note.getUser().getId())){
+            throw new AccessDeniedException("No permission!");
         }
         return note;
     }
