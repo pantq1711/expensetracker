@@ -33,7 +33,7 @@ public class TransactionController {
             Pageable pageable = PageRequest.of(page, size, Sort.by("date").descending());
             return ResponseEntity.ok(transactionService.getAllTransactions(pageable));
         }
-        return ResponseEntity.ok(transactionService.getAllTransaction());
+        return ResponseEntity.ok(transactionService.getAllTransactionsForAdmin());
     }
 
     @Operation(summary = "Filter transactions by date range (Paginated)")

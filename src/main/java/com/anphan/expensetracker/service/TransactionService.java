@@ -1,4 +1,5 @@
 package com.anphan.expensetracker.service;
+import com.anphan.expensetracker.constant.MessageConstants;
 import com.anphan.expensetracker.dto.CategoryReportDTO;
 import com.anphan.expensetracker.dto.SummaryProjection;
 import com.anphan.expensetracker.dto.TransactionDTO;
@@ -67,7 +68,12 @@ public class TransactionService{
     public TransactionDTO updateTransaction(Long id, TransactionDTO dto){
         Transaction transaction = getTransactionAndCheckOwnership(id);
         Category category = categoryRepository.findById(dto.getCategoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Not found category with ID: " + dto.getCategoryId()));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        String.format(com.anphan.expensetracker.constant.MessageConstants.CATEGORY_NOT_FOUND, dto.getCategoryId())
+                ));
+        if(!securityUtils.isAdminOrOwner(category.getUser().getId())){
+            throw new AccessDeniedException(String.format(MessageConstants.UNAUTHORIZED_ACTION));
+        }
         transaction.setCategory(category);
         transaction.setAmount(dto.getAmount());
         transaction.setNote(dto.getNote());
@@ -81,17 +87,19 @@ public class TransactionService{
         Transaction transaction = new Transaction();
         transaction.setUser(getCurrentUser());
         Category category = categoryRepository.findById(dto.getCategoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Not found category with ID: " + dto.getCategoryId()));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        String.format(com.anphan.expensetracker.constant.MessageConstants.CATEGORY_NOT_FOUND, dto.getCategoryId())
+                ));
         if(!securityUtils.isAdminOrOwner(category.getUser().getId())){
-            throw new AccessDeniedException("No permission");
+            throw new AccessDeniedException(String.format(MessageConstants.UNAUTHORIZED_ACTION));
         }
         transaction.setCategory(category);
         transaction.setType(dto.getType());
         transaction.setDate(dto.getDate());
         transaction.setAmount(dto.getAmount());
         transaction.setNote(dto.getNote());
-        transactionRepository.save(transaction);
-        return convertToDTO(transaction);
+        Transaction savedTransaction = transactionRepository.save(transaction); // Hứng lại đồ xịn!
+        return convertToDTO(savedTransaction);
     }
 
     public void deleteTransaction(Long id){
