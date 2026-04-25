@@ -62,7 +62,6 @@ public class TransactionServiceTest {
 
     @Test
     void createTransaction_WhenValidInput_ShouldReturnDto() {
-        // TODO
 //         ARRANGE
         Category category = new Category();
         category.setId(99L);
@@ -93,7 +92,6 @@ public class TransactionServiceTest {
 
     @Test
     void createTransaction_WhenCategoryNotFound_ShouldThrowException() {
-        // TODO
         // ARRANGE
         when(securityUtils.getCurrentUser()).thenReturn(mockUser);
         when(categoryRepository.findById(99L)).thenReturn(Optional.empty());
@@ -110,7 +108,6 @@ public class TransactionServiceTest {
 
     @Test
     void updateTransaction_WhenNotOwner_ShouldThrowAccessDeniedException() {
-        // TODO
         //Arrange
         User realOwner = new User();
         realOwner.setId(2L);
@@ -131,7 +128,6 @@ public class TransactionServiceTest {
 
     @Test
     void getAllTransactions_WhenPageable_ShouldReturnMappedPage() {
-        // TODO
         //Arrange
         when(securityUtils.getCurrentUser()).thenReturn(mockUser);
 

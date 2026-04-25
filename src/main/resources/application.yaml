@@ -15,3 +15,8 @@ jwt:
   expiration: ${JWT_EXPIRATION:900000}
 server:
   port: 8080
+
+# TODO: Add Redis Config
+# spring:
+#   data:
+#     redis:

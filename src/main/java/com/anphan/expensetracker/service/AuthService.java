@@ -9,6 +9,8 @@ import com.anphan.expensetracker.repository.RefreshTokenRepository;
 import com.anphan.expensetracker.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +18,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Transactional
 public class AuthService {
-
+    private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService; // inject JwtService để tạo token
@@ -40,18 +42,18 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found!"));
+        //dung framework thay vi check password, email thu cong
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+        );
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Wrong password!");
-        }
+        User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
 
         return buildAuthResponse(user);
     }
 
     public AuthResponse refreshToken(String refreshTokenStr){
-        RefreshToken oldRefreshToken = refreshTokenService.verifyRefreshToken(refreshTokenStr);
+        RefreshToken oldRefreshToken = refreshTokenService.validateAndRevokeToken(refreshTokenStr);
         User user = oldRefreshToken.getUser();
         return buildAuthResponse(user);
     }

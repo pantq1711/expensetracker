@@ -1,10 +1,16 @@
 package com.anphan.expensetracker.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Schema(description = "Authentication token payload")
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class AuthResponse {
 
     @Schema(description = "JWT Access Token for authorized requests", example = "eyJhbGciOiJIUzI1NiJ9...")
