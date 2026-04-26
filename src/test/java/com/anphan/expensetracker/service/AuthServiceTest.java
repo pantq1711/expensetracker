@@ -13,6 +13,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -20,6 +24,9 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
+    @Mock
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+
     @Mock
     private RefreshTokenService refreshTokenService;
 
@@ -52,28 +59,25 @@ class AuthServiceTest {
     @Test
     void login_WhenValidCredentials_ShouldReturnTokens() {
         // ARRANGE
-        // trả về 1 cái Authentication giả
-        when(authenticationManager.authenticate(any(org.springframework.security.authentication.UsernamePasswordAuthenticationToken.class)))
-                .thenReturn(mock(org.springframework.security.core.Authentication.class));
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenReturn(mock(Authentication.class));
 
-        // cứ tìm email thì nhả mockUser ra
-        when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(java.util.Optional.of(mockUser));
+        when(userRepository.findByEmail(loginRequest.getEmail()))
+                .thenReturn(java.util.Optional.of(mockUser));
 
-        //
         RefreshToken mockRt = new RefreshToken();
-        mockRt.setToken("refresh-12345");
+        mockRt.setToken("RT1");
         when(refreshTokenService.createRefreshToken(mockUser)).thenReturn(mockRt);
-        when(jwtService.generateToken(mockUser.getEmail())).thenReturn("access-12345");
+        when(jwtService.generateToken(mockUser.getEmail())).thenReturn("AT1");
 
         // ACT
         AuthResponse result = authService.login(loginRequest);
 
         // ASSERT
         assertNotNull(result);
-        assertEquals("access-12345", result.getToken());
-        assertEquals("refresh-12345", result.getRefreshToken());
+        assertEquals("AT1", result.getToken());
+        assertEquals("RT1", result.getRefreshToken());
     }
-
     @Test
     void login_WhenWrongPassword_ShouldThrowBadCredentialsException() {
         // ARRANGE
@@ -133,5 +137,62 @@ class AuthServiceTest {
 
         // VERIFY: Không cấp Access Token mới
         verify(jwtService, never()).generateToken(anyString());
+    }
+
+    @Test
+    void register_WhenValidRequest_ShouldSaveAndReturnTokens() {
+        // ARRANGE
+        RegisterRequest request = new RegisterRequest();
+        request.setEmail("anphan@example.com");
+        request.setName("An Phan");
+        request.setPassword("password123");
+
+        User savedUser = new User();
+        savedUser.setEmail("anphan@example.com");
+
+        when(userRepository.existsByEmail(request.getEmail())).thenReturn(false);
+        when(passwordEncoder.encode(request.getPassword())).thenReturn("encoded-password");
+        when(userRepository.save(any(User.class))).thenReturn(savedUser);
+
+        RefreshToken mockRt = new RefreshToken();
+        mockRt.setToken("RT1");
+        when(refreshTokenService.createRefreshToken(any(User.class))).thenReturn(mockRt);
+        when(jwtService.generateToken(anyString())).thenReturn("AT1");
+
+        // ACT
+        AuthResponse result = authService.register(request);
+
+        // ASSERT
+        assertNotNull(result);
+        assertEquals("AT1", result.getToken());
+        assertEquals("RT1", result.getRefreshToken());
+        verify(userRepository, times(1)).save(any(User.class));
+    }
+
+    @Test
+    void refreshToken_WhenValidToken_ShouldReturnNewTokens() {
+        // ARRANGE
+        String oldToken = "valid-old-refresh-token";
+
+        User user = new User();
+        user.setEmail("anphan@com");
+
+        RefreshToken validatedToken = new RefreshToken();
+        validatedToken.setUser(user);
+
+        RefreshToken newRefreshToken = new RefreshToken();
+        newRefreshToken.setToken("RT1");
+
+        when(refreshTokenService.validateAndRevokeToken(oldToken)).thenReturn(validatedToken);
+        when(jwtService.generateToken(user.getEmail())).thenReturn("AT1");
+        when(refreshTokenService.createRefreshToken(user)).thenReturn(newRefreshToken);
+
+        // ACT
+        AuthResponse result = authService.refreshToken(oldToken);
+
+        // ASSERT
+        assertNotNull(result);
+        assertEquals("AT1", result.getToken());
+        assertEquals("RT1", result.getRefreshToken());
     }
 }

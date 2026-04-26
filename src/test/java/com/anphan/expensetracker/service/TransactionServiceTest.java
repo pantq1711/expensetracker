@@ -160,4 +160,95 @@ public class TransactionServiceTest {
                 () -> assertTrue(new BigDecimal("150000").compareTo(result.getContent().get(0).getAmount()) == 0)
         );
     }
+
+    @Test
+    void getTransactionById_WhenFoundAndOwner_ShouldReturnDto() {
+        // ARRANGE
+        Long txId = 1L;
+        User owner = new User();
+        owner.setId(2L);
+
+        Transaction transaction = new Transaction();
+        transaction.setId(txId);
+        transaction.setAmount(new BigDecimal("500000"));
+        transaction.setUser(owner);
+
+        when(transactionRepository.findById(txId)).thenReturn(Optional.of(transaction));
+        when(securityUtils.isAdminOrOwner(owner.getId())).thenReturn(true);
+
+        // ACT
+        TransactionDTO result = transactionService.getTransactionById(txId);
+
+        // ASSERT
+        assertNotNull(result);
+        assertEquals(txId, result.getId());
+        assertTrue(new BigDecimal("500000").compareTo(result.getAmount()) == 0);
+    }
+
+    @Test
+    void getTransactionById_WhenNotFound_ShouldThrowException() {
+        // ARRANGE
+        Long txId = 99L;
+        when(transactionRepository.findById(txId)).thenReturn(Optional.empty());
+
+        // ACT & ASSERT
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
+                () -> transactionService.getTransactionById(txId));
+
+        assertEquals("Not found Transaction: 99", exception.getMessage());
+    }
+
+    @Test
+    void updateTransaction_WhenValidOwner_ShouldUpdateAndReturnDto() {
+        // ARRANGE
+        Long txId = 1L;
+        User owner = new User();
+        owner.setId(2L);
+
+        Transaction existingTx = new Transaction();
+        existingTx.setId(txId);
+        existingTx.setUser(owner);
+        existingTx.setAmount(new BigDecimal("100000")); // Số tiền cũ
+
+        Category category = new Category();
+        category.setId(99L);
+        category.setUser(owner);
+
+        when(transactionRepository.findById(txId)).thenReturn(Optional.of(existingTx));
+        // Quyền của Transaction
+        when(securityUtils.isAdminOrOwner(owner.getId())).thenReturn(true);
+        when(categoryRepository.findById(transactionDTO.getCategoryId())).thenReturn(Optional.of(category));
+        when(transactionRepository.save(any(Transaction.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        // ACT
+        TransactionDTO result = transactionService.updateTransaction(txId, transactionDTO);
+
+        // ASSERT
+        assertNotNull(result);
+        // Kiểm tra xem số tiền có được update theo DTO (150000) setup ở @BeforeEach không
+        assertTrue(new BigDecimal("150000").compareTo(result.getAmount()) == 0);
+        assertEquals(99L, result.getCategoryId());
+        verify(transactionRepository, times(1)).save(existingTx);
+    }
+
+    @Test
+    void deleteTransaction_WhenValidOwner_ShouldDelete() {
+        // ARRANGE
+        Long txId = 1L;
+        User owner = new User();
+        owner.setId(2L);
+
+        Transaction transaction = new Transaction();
+        transaction.setId(txId);
+        transaction.setUser(owner);
+
+        when(transactionRepository.findById(txId)).thenReturn(Optional.of(transaction));
+        when(securityUtils.isAdminOrOwner(owner.getId())).thenReturn(true);
+
+        // ACT
+        transactionService.deleteTransaction(txId);
+
+        // ASSERT
+        verify(transactionRepository, times(1)).delete(transaction);
+    }
 }

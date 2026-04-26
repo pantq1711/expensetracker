@@ -24,7 +24,11 @@ public class Budget{
 
     private BigDecimal amount;
 
-    private int month, year;
+    @Column(name = "budget_month")
+    private int month;
+
+    @Column(name = "budget_year")
+    private int year;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, name = "category_id")

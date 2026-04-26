@@ -2,21 +2,17 @@ spring:
   application:
     name: expensetracker
   datasource:
-    url: jdbc:mysql://localhost:3306/expensetracker_db?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh
+    url: jdbc:mysql://localhost:3306/expensetracker_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
 
 jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION:900000}
-server:
-  port: 8080
-
-# TODO: Add Redis Config
-# spring:
-#   data:
-#     redis:

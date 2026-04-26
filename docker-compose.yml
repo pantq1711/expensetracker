@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  # 1. CỤC DATABASE (MySQL)
+  mysql-db:
+    image: mysql:8.0
+    container_name: expensetracker_mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: expensetracker_db
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    ports:
+      - "3306:3306" # Map port 3306 của máy host vào 3306 của container
+    volumes:
+      - mysql_data:/var/lib/mysql # Lưu lại data để tắt máy không bị mất
+
+  # 2. CỤC CACHE (Redis)
+  redis-cache:
+    image: redis:alpine
+    container_name: expensetracker_redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+  # 3.
+  app:
+    build: . # Bảo nó đọc file Dockerfile ở thư mục hiện tại để build ảnh
+    container_name: expensetracker_api
+    restart: always
+    depends_on:
+      - mysql-db
+      - redis-cache
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/expensetracker_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - SPRING_DATA_REDIS_HOST=redis-cache
+      - SPRING_DATA_REDIS_PORT=6379
+
+
+volumes:
+  mysql_data:
