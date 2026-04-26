@@ -28,7 +28,7 @@ FROM eclipse-temurin:17-jre-alpine
 
 WORKDIR /app
 
-# Lấy "chiến lợi phẩm" là file .jar từ STAGE 1 mang sang STAGE 2
+# Lấy file .jar từ STAGE 1 mang sang STAGE 2
 COPY --from=build /app/target/*.jar app.jar
 
 # Mở cổng 8080 cho bên ngoài gọi vào
