@@ -7,6 +7,7 @@ import com.anphan.expensetracker.dto.RegisterRequest;
 import com.anphan.expensetracker.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
@@ -34,8 +35,17 @@ public class AuthController {
 
     @Operation(summary = "Login to the system", description = "Authenticates user credentials and returns JWT tokens")
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
-        return ResponseEntity.ok(authService.login(request));
+    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request, HttpServletRequest httpRequest) {
+        String ip = getClientIp(httpRequest);
+        return ResponseEntity.ok(authService.login(request, ip));
+    }
+
+    private String getClientIp(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isBlank()) {
+            return xForwardedFor.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 
     @Operation(summary = "Refresh Access Token", description = "Generates a new access token using a valid refresh token")

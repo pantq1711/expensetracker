@@ -1,6 +1,7 @@
 package com.anphan.expensetracker.config;
 
 import com.anphan.expensetracker.filter.JwtAuthFilter;
+import com.anphan.expensetracker.filter.RateLimitFilter;
 import com.anphan.expensetracker.security.JwtAccessDeniedHandler;
 import com.anphan.expensetracker.security.JwtAuthEntryPoint;
 import com.anphan.expensetracker.service.CustomUserDetailsService;
@@ -33,6 +34,7 @@ public class SecurityConfig {
     private final CustomUserDetailsService userDetailsService;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
     private final JwtAuthEntryPoint authenticationEntryPoint;
+    private final RateLimitFilter rateLimitFilter;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -81,6 +83,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
+                .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

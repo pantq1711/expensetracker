@@ -24,6 +24,7 @@ public class AuthService {
     private final JwtService jwtService; // inject JwtService để tạo token
     private final RefreshTokenService refreshTokenService;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final RateLimitService rateLimitService;
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -41,11 +42,14 @@ public class AuthService {
         return buildAuthResponse(user);
     }
 
-    public AuthResponse login(LoginRequest request) {
+    public AuthResponse login(LoginRequest request, String ip) {
         //dung framework thay vi check password, email thu cong
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
+
+        // Login thành công -> xóa counter, tránh block user hợp lệ
+        rateLimitService.resetLimit(ip);
 
         User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
 
