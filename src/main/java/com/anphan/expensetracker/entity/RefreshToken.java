@@ -21,8 +21,11 @@ public class RefreshToken {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true) private String token; // UUID string, không phải JWT
-    @OneToOne @JoinColumn(name = "user_id", nullable = false)
+    @Column(nullable = false, unique = true)
+    private String token; // UUID string, không phải JWT
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Column(nullable = false)

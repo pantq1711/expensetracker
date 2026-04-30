@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Authentication", description = "APIs for user registration, login, and token management")
 @RequiredArgsConstructor
 @Builder
+@Slf4j
 public class AuthController {
 
     private final AuthService authService;
@@ -56,8 +58,10 @@ public class AuthController {
 
     @Operation(summary = "Logout", description = "Invalidates the current user's refresh token from the database")
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout() {
-        authService.logout(securityUtils.getCurrentUser());
+    public ResponseEntity<Void> logout(HttpServletRequest httpServletRequest) {
+        String token = httpServletRequest.getHeader("Authorization").substring(7);
+        log.info("=> Token bóc ra để chuẩn bị blacklist: [{}]", token);
+        authService.logout(securityUtils.getCurrentUser(), token);
         return ResponseEntity.noContent().build();
     }
 }

@@ -25,6 +25,7 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;
     private final RefreshTokenRepository refreshTokenRepository;
     private final RateLimitService rateLimitService;
+    private final TokenBlackListService tokenBlackListService;
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -62,7 +63,8 @@ public class AuthService {
         return buildAuthResponse(user);
     }
 
-    public void logout(User user){
+    public void logout(User user, String accessToken){
+        tokenBlackListService.blackListToken(accessToken);
         refreshTokenService.deleteRefreshToken(user);
     }
 

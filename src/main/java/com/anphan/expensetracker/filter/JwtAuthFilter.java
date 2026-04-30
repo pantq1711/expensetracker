@@ -1,6 +1,7 @@
 package com.anphan.expensetracker.filter;
 
 import com.anphan.expensetracker.service.JwtService;
+import com.anphan.expensetracker.service.TokenBlackListService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,6 +25,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+    private final TokenBlackListService tokenBlackListService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -41,6 +43,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         final String authToken = header.substring(7);
+        if (tokenBlackListService.isBlackListed(authToken)) {
+            log.warn("Blacklisted token used");
+            SecurityContextHolder.clearContext();
+
+            // filterChain.doFilter(request, response);
+
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"Unauthorized\", \"message\": \"Token has been revoked\"}");
+            return; // Kết thúc request tại đây
+        }
         try {
             final String email = jwtService.extractEmail(authToken);
 

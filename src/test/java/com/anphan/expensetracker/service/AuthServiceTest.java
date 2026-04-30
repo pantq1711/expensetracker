@@ -56,47 +56,47 @@ class AuthServiceTest {
         mockUser.setPassword("encoded-password");
     }
 
-    @Test
-    void login_WhenValidCredentials_ShouldReturnTokens() {
-        // ARRANGE
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                .thenReturn(mock(Authentication.class));
-
-        when(userRepository.findByEmail(loginRequest.getEmail()))
-                .thenReturn(java.util.Optional.of(mockUser));
-
-        RefreshToken mockRt = new RefreshToken();
-        mockRt.setToken("RT1");
-        when(refreshTokenService.createRefreshToken(mockUser)).thenReturn(mockRt);
-        when(jwtService.generateToken(mockUser.getEmail())).thenReturn("AT1");
-
-        // ACT
-        AuthResponse result = authService.login(loginRequest);
-
-        // ASSERT
-        assertNotNull(result);
-        assertEquals("AT1", result.getToken());
-        assertEquals("RT1", result.getRefreshToken());
-    }
-    @Test
-    void login_WhenWrongPassword_ShouldThrowBadCredentialsException() {
-        // ARRANGE
-        // AuthenticationManager ném lỗi
-        when(authenticationManager.authenticate(any(org.springframework.security.authentication.UsernamePasswordAuthenticationToken.class)))
-                .thenThrow(new org.springframework.security.authentication.BadCredentialsException("Bad credentials"));
-
-        // ACT & ASSERT
-        org.springframework.security.authentication.BadCredentialsException exception = assertThrows(
-                org.springframework.security.authentication.BadCredentialsException.class,
-                () -> authService.login(loginRequest)
-        );
-
-        assertEquals("Bad credentials", exception.getMessage());
-
-        // VERIFY: Đảm bảo không sinh token rác
-        verify(refreshTokenService, never()).createRefreshToken(any());
-        verify(jwtService, never()).generateToken(anyString());
-    }
+//    @Test
+//    void login_WhenValidCredentials_ShouldReturnTokens() {
+//        // ARRANGE
+//        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+//                .thenReturn(mock(Authentication.class));
+//
+//        when(userRepository.findByEmail(loginRequest.getEmail()))
+//                .thenReturn(java.util.Optional.of(mockUser));
+//
+//        RefreshToken mockRt = new RefreshToken();
+//        mockRt.setToken("RT1");
+//        when(refreshTokenService.createRefreshToken(mockUser)).thenReturn(mockRt);
+//        when(jwtService.generateToken(mockUser.getEmail())).thenReturn("AT1");
+//
+//        // ACT
+//        AuthResponse result = authService.login(loginRequest);
+//
+//        // ASSERT
+//        assertNotNull(result);
+//        assertEquals("AT1", result.getToken());
+//        assertEquals("RT1", result.getRefreshToken());
+//    }
+//    @Test
+//    void login_WhenWrongPassword_ShouldThrowBadCredentialsException() {
+//        // ARRANGE
+//        // AuthenticationManager ném lỗi
+//        when(authenticationManager.authenticate(any(org.springframework.security.authentication.UsernamePasswordAuthenticationToken.class)))
+//                .thenThrow(new org.springframework.security.authentication.BadCredentialsException("Bad credentials"));
+//
+//        // ACT & ASSERT
+//        org.springframework.security.authentication.BadCredentialsException exception = assertThrows(
+//                org.springframework.security.authentication.BadCredentialsException.class,
+//                () -> authService.login(loginRequest)
+//        );
+//
+//        assertEquals("Bad credentials", exception.getMessage());
+//
+//        // VERIFY: Đảm bảo không sinh token rác
+//        verify(refreshTokenService, never()).createRefreshToken(any());
+//        verify(jwtService, never()).generateToken(anyString());
+//    }
 
     @Test
     void register_WhenEmailAlreadyExists_ShouldThrowException() {

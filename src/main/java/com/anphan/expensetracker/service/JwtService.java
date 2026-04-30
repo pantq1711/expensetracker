@@ -48,6 +48,10 @@ public class JwtService {
         return extractClaim(token, Claims::getExpiration).before(new Date());
     }
 
+    public Date extractExpiration(String token){
+        return extractClaim(token, Claims::getExpiration);
+    }
+
     public boolean isTokenValid(String token, String email){
         return extractEmail(token).equals(email) && !isTokenExpired(token);
     }
