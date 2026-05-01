@@ -1,46 +1,74 @@
 package com.anphan.expensetracker.service;
 
-import com.anphan.expensetracker.dto.CategoryReportDTO;
-import com.anphan.expensetracker.dto.FilterReportProjection;
-import com.anphan.expensetracker.dto.RealDashBoardProjection;
-import com.anphan.expensetracker.dto.SummaryProjection;
+import com.anphan.expensetracker.dto.*;
 import com.anphan.expensetracker.entity.Transaction;
 import com.anphan.expensetracker.entity.User;
 import com.anphan.expensetracker.repository.TransactionRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ReportService {
+
     private final TransactionRepository transactionRepository;
-
     private final com.anphan.expensetracker.util.SecurityUtils securityUtils;
+    private final ReportCacheService reportCacheService;
+    private final ObjectMapper objectMapper;
 
-    private User getCurrentUser(){
-        return securityUtils.getCurrentUser();
-    }
-
-    // Bài 3: Tổng quan Thu/Chi
     public SummaryProjection getSumByUser() {
-        return transactionRepository.sumByUser(getCurrentUser());
+        User user = getCurrentUser();
+
+        // Check cache
+        String cached = reportCacheService.getCachedSummary(user.getId());
+        if (cached != null) {
+            log.info("[REPORT] Cache HIT summary userId=[{}]", user.getId());
+            try {
+                // SummaryProjection là interface, cần dùng Map để deserialize
+                return objectMapper.readValue(cached, SummaryProjectionImpl.class);
+            } catch (Exception e) {
+                log.warn("[REPORT] Cache read failed, fallback to DB", e);
+            }
+        }
+
+        // Cache MISS -> query DB
+        log.info("[REPORT] Cache MISS summary userId=[{}]", user.getId());
+        SummaryProjection result = transactionRepository.sumByUser(user);
+        reportCacheService.cacheSummary(user.getId(), result);
+        return result;
     }
 
-    // Bài 6 (Cũ): Thống kê theo Category
     public List<CategoryReportDTO> getReportByNameCategory() {
-        return transactionRepository.sumByCategoryName(getCurrentUser());
+        User user = getCurrentUser();
+
+        List<CategoryReportDTO> cached = reportCacheService.getCachedCategory(user.getId());
+        if (cached != null) {
+            log.info("[REPORT] Cache HIT category userId=[{}]", user.getId());
+            return cached;
+        }
+
+        log.info("[REPORT] Cache MISS category userId=[{}]", user.getId());
+        List<CategoryReportDTO> result = transactionRepository.sumByCategoryName(user);
+        reportCacheService.cacheCategory(user.getId(), result);
+        return result;
     }
 
-    // --- BỔ SUNG BÀI 4: Filter & Report ---
+    // filter và compare không cache vì params thay đổi liên tục
     public FilterReportProjection getTotalAndCount(LocalDate from, LocalDate to, Transaction.TransactionType type) {
         return transactionRepository.totalAndCountBetweenDate(getCurrentUser(), from, to, type);
     }
 
-    // --- BỔ SUNG BÀI 5: So sánh 2 tháng ---
     public RealDashBoardProjection getDiff(LocalDate s1, LocalDate e1, LocalDate s2, LocalDate e2) {
         return transactionRepository.difBetweenMonth(getCurrentUser(), s1, e1, s2, e2);
+    }
+
+    private User getCurrentUser() {
+        return securityUtils.getCurrentUser();
     }
 }

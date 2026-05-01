@@ -22,6 +22,7 @@ import java.util.List;
 @RequiredArgsConstructor
 
 public class TransactionService{
+    private final ReportCacheService reportCacheService;
 
     private final TransactionRepository transactionRepository;
 
@@ -80,6 +81,7 @@ public class TransactionService{
         transaction.setType(dto.getType());
         transaction.setDate(dto.getDate());
         transactionRepository.save(transaction);
+        reportCacheService.invalidateUserReports(getCurrentUser().getId());
         return convertToDTO(transaction);
     }
 
@@ -98,12 +100,15 @@ public class TransactionService{
         transaction.setDate(dto.getDate());
         transaction.setAmount(dto.getAmount());
         transaction.setNote(dto.getNote());
-        Transaction savedTransaction = transactionRepository.save(transaction); // Hứng lại đồ xịn!
+        Transaction savedTransaction = transactionRepository.save(transaction);
+        reportCacheService.invalidateUserReports(getCurrentUser().getId());
         return convertToDTO(savedTransaction);
     }
 
     public void deleteTransaction(Long id){
+
         transactionRepository.delete(getTransactionAndCheckOwnership(id));
+        reportCacheService.invalidateUserReports(getCurrentUser().getId());
     }
 
      private User getCurrentUser() {
