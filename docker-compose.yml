@@ -23,21 +23,21 @@ services:
       - "6379:6379"
 
   # 3.
-  app:
-    build: . # Bảo nó đọc file Dockerfile ở thư mục hiện tại để build ảnh
-    container_name: expensetracker_api
-    restart: always
-    depends_on:
-      - mysql-db
-      - redis-cache
-    ports:
-      - "8080:8080"
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/expensetracker_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
-      - SPRING_DATA_REDIS_HOST=redis-cache
-      - SPRING_DATA_REDIS_PORT=6379
+#  app:
+#    build: . # Bảo nó đọc file Dockerfile ở thư mục hiện tại để build ảnh
+#    container_name: expensetracker_api
+#    restart: always
+#    depends_on:
+#      - mysql-db
+#      - redis-cache
+#    ports:
+#      - "8080:8080"
+#    environment:
+#      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/expensetracker_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+#      - SPRING_DATASOURCE_USERNAME=root
+#      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+#      - SPRING_DATA_REDIS_HOST=redis-cache
+#      - SPRING_DATA_REDIS_PORT=6379
 
 
 volumes:

@@ -10,7 +10,12 @@ import java.math.BigDecimal;
 import java.time.YearMonth;
 
 @Entity
-@Table(name = "budgets")
+@Table(name = "budgets"
+        ,
+        indexes = {
+                @Index(name = "idx_budget_user_month_year", columnList = "user_id, month, year")
+        }
+)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
