@@ -21,9 +21,9 @@ public class TokenBlackListService {
     public void blackListToken(String token){
         Date expiration = jwtService.extractExpiration(token);
         long TTLMils = expiration.getTime() - System.currentTimeMillis();
-        log.info("=> Tính toán TTL cho token: expiration={} | now={} | ttlMillis={}", expiration.getTime(), System.currentTimeMillis(), TTLMils);
+        log.info("=> TTL for token: expiration={} | now={} | ttlMillis={}", expiration.getTime(), System.currentTimeMillis(), TTLMils);
         if (TTLMils <= 0) {
-            log.warn("=> Token đã hết hạn, bỏ qua blacklist");
+            log.warn("=>Token is expired, Blacklist is not needed!");
             return;
         }
 
@@ -33,7 +33,7 @@ public class TokenBlackListService {
                     Duration.ofMillis(TTLMils)
         );
         Boolean isSaved = redisTemplate.hasKey(BLACKLIST_PREFIX + token);
-        log.info("=> Đã lưu vào Redis thành công chưa? {}", isSaved);
+        log.info("=> Have saved into Redis successfully? {}", isSaved);
     }
 
     public boolean isBlackListed(String token){
