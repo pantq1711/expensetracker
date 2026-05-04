@@ -10,6 +10,7 @@ import com.anphan.expensetracker.repository.UserRepository;
 import com.anphan.expensetracker.repository.WalletMemberRepository;
 import com.anphan.expensetracker.repository.WalletRepository;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.BadRequestException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -112,7 +113,8 @@ public class WalletService {
         // Contribution cũng atomic
         walletMemberRepository.addContribution(member.getId(), amount);
 
-        return convertToDTO(walletRepository.findById(walletId).orElseThrow());
+        wallet.setBalance(wallet.getBalance().add(amount));
+        return convertToDTO(wallet);
     }
 
     // Update name/budget — dùng optimistic locking, ít conflict hơn nên retry là đủ
@@ -136,10 +138,12 @@ public class WalletService {
     }
 
     @Transactional
-    public void addMember(Long walletId, Long userId) {
+    public void addMember(Long walletId, Long userId) throws BadRequestException {
         Wallet wallet = getWalletAndCheckOwner(walletId);
 
+        if (securityUtils.getCurrentUser().getId().equals(userId)) throw new BadRequestException("Bạn không thể tự add chính mình!");
         User newUser = userRepository.findById(userId)
+
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
 
         // Kiểm tra đã là member chưa

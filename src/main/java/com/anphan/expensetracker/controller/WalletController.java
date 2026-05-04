@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.BadRequestException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -61,7 +62,7 @@ public class WalletController {
     @PostMapping("/{id}/members/{userId}")
     public ResponseEntity<Void> addMember(
             @PathVariable Long id,
-            @PathVariable Long userId) {
+            @PathVariable Long userId) throws BadRequestException {
         walletService.addMember(id, userId);
         return ResponseEntity.noContent().build();
     }

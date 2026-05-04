@@ -42,3 +42,8 @@ services:
 
 volumes:
   mysql_data:
+
+#docker stop expensetracker_api
+
+
+
