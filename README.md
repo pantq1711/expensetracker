@@ -29,7 +29,7 @@ The system was load-tested using **k6** to verify concurrency handling and respo
 * **Scenario:** 100 concurrent Virtual Users (VUs) creating transactions and fetching reports continuously for 30 seconds.
 * **Result:** Achieved **~130 req/s** throughput with **0.00% error rate** and **p(95) response time < 250ms**.
 
-![k6 Load Test Result](docs/k6-result.png)
+![k6 Load Test Result](docs/k6-result.jpg)
 ## Run Locally
 
 **1. Start dependencies (MySQL, Redis)**
