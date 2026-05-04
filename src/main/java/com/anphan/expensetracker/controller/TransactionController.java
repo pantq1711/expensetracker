@@ -56,8 +56,10 @@ public class TransactionController {
 
     @Operation(summary = "Create a new transaction")
     @PostMapping
-    public ResponseEntity<TransactionDTO> createTransaction(@Valid @RequestBody TransactionDTO dto){
-        return ResponseEntity.status(201).body(transactionService.createTransaction(dto));
+    public ResponseEntity<TransactionDTO> createTransaction(
+            @Valid @RequestBody TransactionDTO dto,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
+        return ResponseEntity.status(201).body(transactionService.createTransaction(dto, idempotencyKey));
     }
 
     @Operation(summary = "Delete transaction by ID")

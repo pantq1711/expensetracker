@@ -9,7 +9,9 @@ import com.anphan.expensetracker.entity.User;
 import com.anphan.expensetracker.exception.ResourceNotFoundException;
 import com.anphan.expensetracker.repository.CategoryRepository;
 import com.anphan.expensetracker.repository.TransactionRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -17,11 +19,15 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
-
+import java.util.Optional;
+@Slf4j
 @Service
 @RequiredArgsConstructor
 
 public class TransactionService{
+
+    private final ObjectMapper objectMapper;
+    private final IdempotencyService idempotencyService;
     private final ReportCacheService reportCacheService;
 
     private final TransactionRepository transactionRepository;
@@ -85,24 +91,43 @@ public class TransactionService{
         return convertToDTO(transaction);
     }
 
-    public TransactionDTO createTransaction(TransactionDTO dto){
+    public TransactionDTO createTransaction(TransactionDTO dto, String idempotencyKey) {
+        // Check idempotency nếu client gửi key
+        if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+            Optional<String> cached = idempotencyService.getCachedResponse(idempotencyKey);
+            if (cached.isPresent()) {
+                try {
+                    return objectMapper.readValue(cached.get(), TransactionDTO.class);
+                } catch (Exception e) {
+                    log.warn("[IDEMPOTENCY] Failed to deserialize cached response", e);
+                }
+            }
+        }
+
+        // Logic tạo transaction như cũ
         Transaction transaction = new Transaction();
         transaction.setUser(getCurrentUser());
         Category category = categoryRepository.findById(dto.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        String.format(com.anphan.expensetracker.constant.MessageConstants.CATEGORY_NOT_FOUND, dto.getCategoryId())
-                ));
-        if(!securityUtils.isAdminOrOwner(category.getUser().getId())){
-            throw new AccessDeniedException(String.format(MessageConstants.UNAUTHORIZED_ACTION));
+                        String.format(MessageConstants.CATEGORY_NOT_FOUND, dto.getCategoryId())));
+        if (!securityUtils.isAdminOrOwner(category.getUser().getId())) {
+            throw new AccessDeniedException(MessageConstants.UNAUTHORIZED_ACTION);
         }
         transaction.setCategory(category);
         transaction.setType(dto.getType());
         transaction.setDate(dto.getDate());
         transaction.setAmount(dto.getAmount());
         transaction.setNote(dto.getNote());
-        Transaction savedTransaction = transactionRepository.save(transaction);
+
+        TransactionDTO result = convertToDTO(transactionRepository.save(transaction));
         reportCacheService.invalidateUserReports(getCurrentUser().getId());
-        return convertToDTO(savedTransaction);
+
+        // Cache kết quả
+        if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+            idempotencyService.cacheResponse(idempotencyKey, result);
+        }
+
+        return result;
     }
 
     public void deleteTransaction(Long id){

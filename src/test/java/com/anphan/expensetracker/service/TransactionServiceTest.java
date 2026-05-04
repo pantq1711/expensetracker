@@ -8,6 +8,7 @@ import com.anphan.expensetracker.entity.User;
 import com.anphan.expensetracker.exception.ResourceNotFoundException;
 import com.anphan.expensetracker.repository.CategoryRepository;
 import com.anphan.expensetracker.repository.TransactionRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +33,14 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class TransactionServiceTest {
+    @Mock
+    private ReportCacheService reportCacheService;
+
+    @Mock
+    private IdempotencyService idempotencyService;
+
+    @Mock
+    private ObjectMapper objectMapper;
 
     @Mock
     private TransactionRepository transactionRepository;
@@ -76,7 +85,7 @@ public class TransactionServiceTest {
         when(securityUtils.isAdminOrOwner(1L)).thenReturn(true);
         when(transactionRepository.save(any(Transaction.class))).thenReturn(transaction);
         // ACT
-        TransactionDTO result = transactionService.createTransaction(transactionDTO);
+        TransactionDTO result = transactionService.createTransaction(transactionDTO, null);
 
         // ASSERT
         assertAll(
@@ -97,7 +106,7 @@ public class TransactionServiceTest {
         when(categoryRepository.findById(99L)).thenReturn(Optional.empty());
         // ACT & ASSERT
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
-                () -> transactionService.createTransaction(transactionDTO));
+                () -> transactionService.createTransaction(transactionDTO, null));
 
         String expectedMessage = String.format(com.anphan.expensetracker.constant.MessageConstants.CATEGORY_NOT_FOUND, 99L);
         assertEquals(expectedMessage, exception.getMessage());
@@ -217,6 +226,7 @@ public class TransactionServiceTest {
         when(transactionRepository.findById(txId)).thenReturn(Optional.of(existingTx));
         // Quyền của Transaction
         when(securityUtils.isAdminOrOwner(owner.getId())).thenReturn(true);
+        when(securityUtils.getCurrentUser()).thenReturn(mockUser);
         when(categoryRepository.findById(transactionDTO.getCategoryId())).thenReturn(Optional.of(category));
         when(transactionRepository.save(any(Transaction.class))).thenAnswer(i -> i.getArguments()[0]);
 
@@ -244,6 +254,7 @@ public class TransactionServiceTest {
 
         when(transactionRepository.findById(txId)).thenReturn(Optional.of(transaction));
         when(securityUtils.isAdminOrOwner(owner.getId())).thenReturn(true);
+        when(securityUtils.getCurrentUser()).thenReturn(mockUser);
 
         // ACT
         transactionService.deleteTransaction(txId);
