@@ -14,7 +14,7 @@ public interface WalletRepository extends JpaRepository<Wallet, Long> {
     @Query("SELECT wm.wallet from WalletMember wm WHERE wm.user = :user")
     List<Wallet> findByMember(@Param("user") User user);
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query("UPDATE Wallet w SET w.balance = w.balance + :amount WHERE w.id = :id")
     int addBalance(@Param("id") Long id, @Param("amount") BigDecimal amount);
 }
